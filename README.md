@@ -123,7 +123,7 @@ uvicorn app.main:app --reload --port 8000
 ## 📋 Features
 
 - [x] Project scaffolding
-- [ ] User authentication (Supabase Auth)
+- [x] User authentication (Supabase Auth)
 - [ ] Resume vault (LaTeX editor + PDF preview)
 - [ ] Job description intake (paste or upload)
 - [ ] AI resume tailoring (Groq / Llama 3.3)

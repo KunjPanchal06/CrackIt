@@ -47,8 +47,11 @@ async def health_check():
 
 
 # ---------- Router Registration ----------
-# Routers will be registered here as we build each phase:
-# from app.routers import auth, resume, jd, tailor, ats, application, dashboard
-# app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
+from app.routers import auth
+
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
+
+# Future phases — uncomment as we build:
+# from app.routers import resume, jd, tailor, ats, application, dashboard
 # app.include_router(resume.router, prefix="/api/v1/resumes", tags=["Resumes"])
 # ...etc

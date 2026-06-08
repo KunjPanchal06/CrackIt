@@ -8,6 +8,10 @@ import AuthGuard from '@/components/auth/AuthGuard';
 
 // Pages
 import LandingPage from '@/pages/LandingPage';
+import LoginPage from '@/pages/LoginPage';
+import SignupPage from '@/pages/SignupPage';
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
+import ResetPasswordPage from '@/pages/ResetPasswordPage';
 import DashboardPage from '@/pages/DashboardPage';
 import AuthCallbackPage from '@/pages/AuthCallbackPage';
 
@@ -18,88 +22,54 @@ import { supabase } from '@/lib/supabase';
 /**
  * Root application component.
  * Sets up routing, auth initialization, and global providers.
- * 
+ *
  * Route structure:
  * - / → Landing page (public)
- * - /login, /signup → Auth pages (public, built in Phase 1)
+ * - /login → Login page (public)
+ * - /signup → Signup page (public)
+ * - /forgot-password → Password reset request (public)
+ * - /reset-password → Set new password (public, via email link)
+ * - /auth/callback → OAuth redirect handler (public)
  * - /dashboard → Dashboard (protected)
- * - /resumes/* → Resume vault (protected, built in Phase 2)
- * - /job-descriptions/* → JD intake (protected, built in Phase 3)
- * - /tailor/* → AI tailoring (protected, built in Phase 4)
- * - /ats → ATS scoring (protected, built in Phase 5)
- * - /applications/* → App tracker (protected, built in Phase 8)
+ * - /resumes/* → Resume vault (protected, Phase 2)
+ * - /job-descriptions/* → JD intake (protected, Phase 3)
+ * - /tailor/* → AI tailoring (protected, Phase 4)
+ * - /ats → ATS scoring (protected, Phase 5)
+ * - /applications/* → App tracker (protected, Phase 8)
  */
 export default function App() {
   const { initialize, setSession } = useAuthStore();
 
   useEffect(() => {
-    // Check for existing session on mount
     initialize();
-
-    // Listen for auth state changes (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-      }
+      (_event, session) => { setSession(session); }
     );
-
     return () => subscription.unsubscribe();
   }, [initialize, setSession]);
 
   return (
     <BrowserRouter>
-      {/* Global toast notifications */}
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: 'var(--card)',
-            color: 'var(--foreground)',
-            border: '1px solid var(--border)',
-          },
-        }}
-      />
+      <Toaster position="top-right" toastOptions={{
+        style: {
+          background: 'var(--card)',
+          color: 'var(--foreground)',
+          border: '1px solid var(--border)',
+        },
+      }} />
 
       <Routes>
         {/* ========== Public Routes ========== */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
-        {/* Login & Signup — placeholder, built in Phase 1 */}
-        <Route
-          path="/login"
-          element={
-            <div className="min-h-screen flex items-center justify-center bg-background">
-              <div className="text-center p-8">
-                <h2 className="text-2xl font-bold gradient-text mb-2">Login Page</h2>
-                <p className="text-muted-foreground">Coming in Phase 1 — Authentication</p>
-              </div>
-            </div>
-          }
-        />
-        <Route
-          path="/signup"
-          element={
-            <div className="min-h-screen flex items-center justify-center bg-background">
-              <div className="text-center p-8">
-                <h2 className="text-2xl font-bold gradient-text mb-2">Signup Page</h2>
-                <p className="text-muted-foreground">Coming in Phase 1 — Authentication</p>
-              </div>
-            </div>
-          }
-        />
-
         {/* ========== Protected Routes (inside AppLayout) ========== */}
-        <Route
-          element={
-            <AuthGuard>
-              <AppLayout />
-            </AuthGuard>
-          }
-        >
+        <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
           <Route path="/dashboard" element={<DashboardPage />} />
-
-          {/* Placeholder routes — will be replaced in later phases */}
           <Route path="/resumes" element={<PlaceholderPage title="Resume Vault" phase={2} />} />
           <Route path="/job-descriptions" element={<PlaceholderPage title="Job Descriptions" phase={3} />} />
           <Route path="/tailor" element={<PlaceholderPage title="AI Resume Tailor" phase={4} />} />
@@ -124,9 +94,7 @@ function PlaceholderPage({ title, phase }) {
     <div className="flex items-center justify-center min-h-[60vh] animate-fade-in">
       <div className="text-center p-10 rounded-2xl border border-dashed border-border">
         <h2 className="text-2xl font-bold gradient-text mb-2">{title}</h2>
-        <p className="text-muted-foreground">
-          Coming in Phase {phase}
-        </p>
+        <p className="text-muted-foreground">Coming in Phase {phase}</p>
       </div>
     </div>
   );
