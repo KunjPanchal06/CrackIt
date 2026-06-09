@@ -291,3 +291,17 @@ kbd {
   color: var(--muted-foreground);
 }
 
+/* ---------- AI Tailor Page Styles ---------- */
+
+/* Loading dots bounce for tailoring animation */
+@keyframes pulse {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+

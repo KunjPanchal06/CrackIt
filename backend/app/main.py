@@ -47,12 +47,13 @@ async def health_check():
 
 
 # ---------- Router Registration ----------
-from app.routers import auth, resume
+from app.routers import auth, resume, tailor
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(resume.router, prefix="/api/v1/resumes", tags=["Resumes"])
+app.include_router(tailor.router, prefix="/api/v1/tailor", tags=["AI Tailoring"])
 
 # Future phases — uncomment as we build:
-# from app.routers import jd, tailor, ats, application, dashboard
-# app.include_router(jd.router, prefix="/api/v1/job-descriptions", tags=["Job Descriptions"])
+# from app.routers import ats, application, dashboard
+# app.include_router(ats.router, prefix="/api/v1/ats", tags=["ATS Scoring"])
 # ...etc

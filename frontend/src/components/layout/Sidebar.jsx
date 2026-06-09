@@ -2,7 +2,6 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   FileText,
-  Briefcase,
   Wand2,
   BarChart3,
   FolderClock,
@@ -20,7 +19,6 @@ import { useState } from 'react';
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
   { icon: FileText, label: 'Resumes', path: '/resumes' },
-  { icon: Briefcase, label: 'Job Descriptions', path: '/job-descriptions' },
   { icon: Wand2, label: 'AI Tailor', path: '/tailor' },
   { icon: BarChart3, label: 'ATS Score', path: '/ats' },
   { icon: FolderClock, label: 'Applications', path: '/applications' },
