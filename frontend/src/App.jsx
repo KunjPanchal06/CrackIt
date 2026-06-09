@@ -14,6 +14,8 @@ import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
 import DashboardPage from '@/pages/DashboardPage';
 import AuthCallbackPage from '@/pages/AuthCallbackPage';
+import ResumesPage from '@/pages/ResumesPage';
+import ResumeEditorPage from '@/pages/ResumeEditorPage';
 
 // Auth store
 import useAuthStore from '@/store/authStore';
@@ -70,7 +72,8 @@ export default function App() {
         {/* ========== Protected Routes (inside AppLayout) ========== */}
         <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/resumes" element={<PlaceholderPage title="Resume Vault" phase={2} />} />
+          <Route path="/resumes" element={<ResumesPage />} />
+          <Route path="/resumes/:resumeId" element={<ResumeEditorPage />} />
           <Route path="/job-descriptions" element={<PlaceholderPage title="Job Descriptions" phase={3} />} />
           <Route path="/tailor" element={<PlaceholderPage title="AI Resume Tailor" phase={4} />} />
           <Route path="/ats" element={<PlaceholderPage title="ATS Score & Analysis" phase={5} />} />

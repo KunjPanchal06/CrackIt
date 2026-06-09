@@ -261,3 +261,33 @@ body {
 }
 
 /* Google Font imported at the top of the file (CSS @import rules must precede all other statements) */
+
+/* ---------- Resume Editor Styles ---------- */
+
+/* PDF page rendering inside react-pdf */
+.react-pdf__Page {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.react-pdf__Page__canvas {
+  border-radius: 8px;
+}
+
+/* Monaco editor dark background blending */
+.monaco-editor,
+.monaco-editor .overflow-guard {
+  border-radius: 0 !important;
+}
+
+/* Keyboard shortcut badge */
+kbd {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
