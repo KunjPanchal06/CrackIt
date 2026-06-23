@@ -54,6 +54,7 @@ app.include_router(resume.router, prefix="/api/v1/resumes", tags=["Resumes"])
 app.include_router(tailor.router, prefix="/api/v1/tailor", tags=["AI Tailoring"])
 
 # Future phases — uncomment as we build:
-# from app.routers import ats, application, dashboard
-# app.include_router(ats.router, prefix="/api/v1/ats", tags=["ATS Scoring"])
+from app.routers import ats
+# from app.routers import application, dashboard
+app.include_router(ats.router, prefix="/api/v1/ats", tags=["ATS Scoring"])
 # ...etc

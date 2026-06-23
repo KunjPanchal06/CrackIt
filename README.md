@@ -127,7 +127,7 @@ uvicorn app.main:app --reload --port 8000
 - [x] Resume vault (LaTeX editor + PDF preview)
 - [x] Job description intake (paste or upload)
 - [x] AI resume tailoring (Groq / Llama 3.3)
-- [ ] ATS score & analysis
+- [x] ATS score & analysis
 - [ ] PDF export (Tectonic)
 - [ ] Version history
 - [ ] Application tracker
