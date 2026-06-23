@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Activity, FileText, Briefcase, Loader2, AlertTriangle,
-  CheckCircle2, XCircle, ChevronRight, Target, Lightbulb, TrendingUp
+  CheckCircle2, XCircle, ChevronRight, Target, Lightbulb,
+  TrendingUp, BarChart3, Zap, Star, AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -52,6 +53,13 @@ export default function AtsPage() {
     return 'bg-destructive/10 border-destructive/20';
   };
 
+  const getScoreLabel = (score) => {
+    if (score >= 80) return 'Excellent Match';
+    if (score >= 60) return 'Good Match';
+    if (score >= 40) return 'Needs Work';
+    return 'Poor Match';
+  };
+
   return (
     <div className="animate-fade-in flex flex-col h-[calc(100vh-7rem)]">
       {/* Header */}
@@ -62,7 +70,7 @@ export default function AtsPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-foreground">ATS Score & Analysis</h1>
-            <p className="text-xs text-muted-foreground">See how well your resume matches a job description</p>
+            <p className="text-xs text-muted-foreground">Hybrid keyword matching + AI quality analysis</p>
           </div>
         </div>
         <button
@@ -131,7 +139,7 @@ export default function AtsPage() {
               id="jd-input"
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
-              placeholder="Paste the full job description here…&#10;&#10;Include role title, responsibilities, required skills, and qualifications."
+              placeholder={"Paste the full job description here…\n\nInclude role title, responsibilities, required skills, and qualifications."}
               className="flex-1 w-full px-4 py-3 rounded-lg bg-background border border-border text-foreground text-sm resize-none leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/50 placeholder:text-muted-foreground/40 min-h-0"
             />
           </div>
@@ -151,7 +159,7 @@ export default function AtsPage() {
               </div>
               <h2 className="text-lg font-bold text-foreground">Analyzing Match</h2>
               <p className="text-sm text-muted-foreground text-center max-w-sm">
-                Our AI is simulating an ATS system, extracting keywords, and scoring your resume against the job description...
+                Extracting keywords, matching against your resume, and running AI quality analysis...
               </p>
             </div>
           )}
@@ -175,7 +183,7 @@ export default function AtsPage() {
               </div>
               <h2 className="text-xl font-semibold text-foreground mb-2">Ready to Analyze</h2>
               <p className="text-sm text-muted-foreground max-w-sm">
-                Select your resume and paste the job description you want to apply for. We'll give you an actionable ATS score.
+                Select your resume and paste the job description. Our hybrid engine extracts keywords deterministically and uses AI for qualitative feedback.
               </p>
             </div>
           )}
@@ -184,7 +192,7 @@ export default function AtsPage() {
           {!isAnalyzing && analysisResult && (
             <div className="flex-1 overflow-y-auto p-6 animate-slide-up">
               
-              {/* Top Section: Score & Summary */}
+              {/* ─── Top Section: Score + Breakdown ─── */}
               <div className="flex flex-col md:flex-row gap-6 mb-8">
                 {/* Circular Score */}
                 <div className="flex flex-col items-center justify-center p-6 rounded-2xl border border-border bg-background/50 min-w-[200px]">
@@ -207,50 +215,177 @@ export default function AtsPage() {
                     </div>
                   </div>
                   <div className={cn("px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border", getScoreBg(analysisResult.score), getScoreColor(analysisResult.score))}>
-                    {analysisResult.score >= 80 ? 'Excellent Match' : analysisResult.score >= 60 ? 'Good Match' : 'Needs Work'}
+                    {getScoreLabel(analysisResult.score)}
                   </div>
                 </div>
 
-                {/* Match Analysis Paragraph */}
-                <div className="flex-1 flex flex-col justify-center">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
-                    <Activity className="w-4 h-4" /> Executive Summary
-                  </h3>
-                  <p className="text-foreground text-sm leading-relaxed bg-primary/5 border border-primary/10 p-5 rounded-2xl">
-                    {analysisResult.match_analysis}
-                  </p>
+                {/* Score Breakdown + Summary */}
+                <div className="flex-1 flex flex-col gap-4 justify-center">
+                  {/* Score Breakdown Bar */}
+                  {analysisResult.score_breakdown && (
+                    <div className="p-4 rounded-2xl border border-border bg-background/50">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                        <BarChart3 className="w-3.5 h-3.5" /> Score Breakdown
+                      </h3>
+                      
+                      {/* Stacked breakdown bar */}
+                      <div className="h-5 rounded-full overflow-hidden flex bg-muted/30 mb-3">
+                        {analysisResult.score_breakdown.keyword_score > 0 && (
+                          <div
+                            className="h-full bg-primary transition-all duration-700 ease-out"
+                            style={{ width: `${analysisResult.score_breakdown.keyword_score}%` }}
+                            title={`Required Keywords: ${analysisResult.score_breakdown.keyword_score}/${analysisResult.score_breakdown.keyword_max}`}
+                          />
+                        )}
+                        {analysisResult.score_breakdown.preferred_score > 0 && (
+                          <div
+                            className="h-full transition-all duration-700 ease-out"
+                            style={{
+                              width: `${analysisResult.score_breakdown.preferred_score}%`,
+                              backgroundColor: 'var(--warning)',
+                            }}
+                            title={`Preferred Keywords: ${analysisResult.score_breakdown.preferred_score}/${analysisResult.score_breakdown.preferred_max}`}
+                          />
+                        )}
+                        {analysisResult.score_breakdown.quality_score > 0 && (
+                          <div
+                            className="h-full transition-all duration-700 ease-out"
+                            style={{
+                              width: `${analysisResult.score_breakdown.quality_score}%`,
+                              backgroundColor: 'var(--success)',
+                            }}
+                            title={`AI Quality: ${analysisResult.score_breakdown.quality_score}/${analysisResult.score_breakdown.quality_max}`}
+                          />
+                        )}
+                      </div>
+
+                      {/* Legend */}
+                      <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[11px]">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2.5 h-2.5 rounded-sm bg-primary" />
+                          <span className="text-muted-foreground">Required Keywords</span>
+                          <span className="font-bold text-foreground">{analysisResult.score_breakdown.keyword_score}/{analysisResult.score_breakdown.keyword_max}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: 'var(--warning)' }} />
+                          <span className="text-muted-foreground">Preferred</span>
+                          <span className="font-bold text-foreground">{analysisResult.score_breakdown.preferred_score}/{analysisResult.score_breakdown.preferred_max}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: 'var(--success)' }} />
+                          <span className="text-muted-foreground">AI Quality</span>
+                          <span className="font-bold text-foreground">{analysisResult.score_breakdown.quality_score}/{analysisResult.score_breakdown.quality_max}</span>
+                        </div>
+                        {analysisResult.score_breakdown.total_penalty < 0 && (
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-2.5 h-2.5 rounded-sm bg-destructive" />
+                            <span className="text-muted-foreground">Penalties</span>
+                            <span className="font-bold text-destructive">{analysisResult.score_breakdown.total_penalty}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Executive Summary */}
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-2">
+                      <Activity className="w-3.5 h-3.5" /> Executive Summary
+                    </h3>
+                    <p className="text-foreground text-sm leading-relaxed bg-primary/5 border border-primary/10 p-4 rounded-2xl">
+                      {analysisResult.match_analysis}
+                    </p>
+                  </div>
                 </div>
               </div>
 
+              {/* ─── Keyword Match Sections ─── */}
               <div className="grid grid-cols-1 gap-6">
-                {/* Missing Keywords Section */}
+
+                {/* Required Keywords */}
                 <div className="rounded-2xl border border-border bg-background/50 overflow-hidden">
                   <div className="px-5 py-4 border-b border-border flex items-center gap-2 bg-muted/20">
-                    <XCircle className="w-5 h-5 text-destructive" />
-                    <h3 className="font-semibold text-foreground">Missing Keywords</h3>
+                    <Zap className="w-5 h-5 text-primary" />
+                    <h3 className="font-semibold text-foreground">Required Keywords</h3>
                     <span className="ml-auto text-xs font-medium text-muted-foreground bg-background px-2 py-1 rounded-md border border-border">
-                      {analysisResult.missing_keywords.length} missing
+                      {analysisResult.required_keywords_matched?.length || 0} / {(analysisResult.required_keywords_matched?.length || 0) + (analysisResult.required_keywords_missing?.length || 0)} matched
                     </span>
                   </div>
                   <div className="p-5">
-                    {analysisResult.missing_keywords.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {(analysisResult.required_keywords_matched || []).map((kw, i) => (
+                        <span key={`rm-${i}`} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-success/10 text-success border border-success/20 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3 h-3" />
+                          {kw}
+                        </span>
+                      ))}
+                      {(analysisResult.required_keywords_missing || []).map((kw, i) => (
+                        <span key={`rx-${i}`} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20 flex items-center gap-1.5">
+                          <XCircle className="w-3 h-3" />
+                          {kw}
+                        </span>
+                      ))}
+                      {(analysisResult.required_keywords_matched?.length || 0) === 0 && (analysisResult.required_keywords_missing?.length || 0) === 0 && (
+                        <p className="text-sm text-muted-foreground">No required keywords extracted from this job description.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Preferred Keywords */}
+                {((analysisResult.preferred_keywords_matched?.length || 0) + (analysisResult.preferred_keywords_missing?.length || 0)) > 0 && (
+                  <div className="rounded-2xl border border-border bg-background/50 overflow-hidden">
+                    <div className="px-5 py-4 border-b border-border flex items-center gap-2 bg-muted/20">
+                      <Star className="w-5 h-5 text-warning" />
+                      <h3 className="font-semibold text-foreground">Preferred Keywords</h3>
+                      <span className="ml-auto text-xs font-medium text-muted-foreground bg-background px-2 py-1 rounded-md border border-border">
+                        {analysisResult.preferred_keywords_matched?.length || 0} / {(analysisResult.preferred_keywords_matched?.length || 0) + (analysisResult.preferred_keywords_missing?.length || 0)} matched
+                      </span>
+                    </div>
+                    <div className="p-5">
                       <div className="flex flex-wrap gap-2">
-                        {analysisResult.missing_keywords.map((kw, i) => (
-                          <span key={i} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20 flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-destructive/50" />
+                        {(analysisResult.preferred_keywords_matched || []).map((kw, i) => (
+                          <span key={`pm-${i}`} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-success/10 text-success border border-success/20 flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3 h-3" />
+                            {kw}
+                          </span>
+                        ))}
+                        {(analysisResult.preferred_keywords_missing || []).map((kw, i) => (
+                          <span key={`px-${i}`} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-warning/15 text-warning border border-warning/20 flex items-center gap-1.5">
+                            <AlertCircle className="w-3 h-3" />
                             {kw}
                           </span>
                         ))}
                       </div>
-                    ) : (
-                      <p className="text-sm text-success flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4" /> Great job! You've hit all the major keywords.
-                      </p>
-                    )}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Improvement Suggestions Section */}
+                {/* Penalties (if any) */}
+                {analysisResult.score_breakdown && analysisResult.score_breakdown.total_penalty < 0 && (
+                  <div className="rounded-2xl border border-destructive/30 bg-destructive/5 overflow-hidden">
+                    <div className="px-5 py-4 border-b border-destructive/20 flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 text-destructive" />
+                      <h3 className="font-semibold text-foreground">Penalties Applied</h3>
+                    </div>
+                    <div className="p-5 space-y-2">
+                      {analysisResult.domain_mismatch && (
+                        <div className="flex items-center gap-2 text-sm text-destructive">
+                          <XCircle className="w-4 h-4 flex-shrink-0" />
+                          <span>Domain mismatch detected: <strong>−20 points</strong></span>
+                        </div>
+                      )}
+                      {analysisResult.score_breakdown.experience_penalty < 0 && (
+                        <div className="flex items-center gap-2 text-sm text-destructive">
+                          <XCircle className="w-4 h-4 flex-shrink-0" />
+                          <span>Experience gap ({analysisResult.experience_gap}): <strong>{analysisResult.score_breakdown.experience_penalty} points</strong></span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Improvement Suggestions */}
                 <div className="rounded-2xl border border-border bg-background/50 overflow-hidden">
                   <div className="px-5 py-4 border-b border-border flex items-center gap-2 bg-muted/20">
                     <Lightbulb className="w-5 h-5 text-warning" />

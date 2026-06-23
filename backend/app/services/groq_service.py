@@ -1,10 +1,16 @@
 """
-Groq AI Service — resume tailoring using Llama 3.3 70B.
+Groq AI Service — resume tailoring and qualitative ATS analysis.
 
-Uses the Groq API for fast LLM inference to analyze job descriptions
-and tailor LaTeX resumes to match requirements and keywords.
+Uses the Groq API for fast LLM inference:
+- tailor_resume():          Rewrites LaTeX resumes to match job descriptions
+- get_qualitative_analysis(): Returns experience alignment, feedback, and
+                              suggestions — but NEVER the score itself
+
+The ATS score is calculated deterministically in keyword_extractor.py.
+The LLM only provides a quality_score (0–20) and qualitative feedback.
 """
 import re
+import json
 from groq import Groq
 from app.config import settings
 
@@ -13,6 +19,10 @@ def get_groq_client() -> Groq:
     """Create and return a Groq API client."""
     return Groq(api_key=settings.groq_api_key)
 
+
+# ══════════════════════════════════════════════════════════════════════
+# RESUME TAILORING (unchanged from original)
+# ══════════════════════════════════════════════════════════════════════
 
 SYSTEM_PROMPT = """\
 You are an expert resume writer and ATS (Applicant Tracking System) optimization specialist.
@@ -85,72 +95,102 @@ def strip_code_fences(text: str) -> str:
     return text.strip()
 
 
-ATS_SYSTEM_PROMPT = """\
-You are a strict ATS (Applicant Tracking System) scoring engine.
-Your task: Analyze a LaTeX resume against a job description and return a PRECISE score.
+# ══════════════════════════════════════════════════════════════════════
+# QUALITATIVE ATS ANALYSIS (Layer 2 — LLM feedback only, NO score)
+# ══════════════════════════════════════════════════════════════════════
 
-## STRICT SCORING RULES — YOU MUST FOLLOW THESE EXACTLY:
+ATS_QUALITATIVE_PROMPT = """\
+You are a resume analysis assistant. Your job is to provide QUALITATIVE feedback only.
 
-Step 1 — Extract required skills from the job description.
-Step 2 — Check each required skill against the resume. Mark each as PRESENT or MISSING.
-Step 3 — Extract required years of experience from the JD. Compare with resume.
-Step 4 — Calculate score using this exact formula:
-    - Start at 100
-    - Each MISSING core/required skill: subtract 8 points
-    - Each MISSING preferred/bonus skill: subtract 3 points
-    - Each year of experience short of requirement: subtract 5 points
-    - Resume has completely unrelated domain: subtract 20 points
-    - Final score cannot go below 0
+IMPORTANT: You do NOT calculate or return a score. The score is calculated separately \
+by a deterministic algorithm. You only provide experience alignment and suggestions.
 
-The score MUST reflect the actual deductions you calculated. 
-A resume missing 5 required skills CANNOT score above 60.
-A resume matching all skills CANNOT score below 80.
-NEVER output 85, 90, 92 as a default — calculate it strictly.
+Given a resume (as plain text) and a job description, analyze the fit and return a JSON object.
 
-## Output Format:
-Return ONLY a valid JSON object. No markdown, no explanation, nothing else.
+## What to evaluate:
+1. **quality_score** (integer 0–20): Rate ONLY how well the candidate's actual experience, \
+projects, and achievements align with the role's responsibilities. This is NOT about keyword matching \
+(that's handled separately). Consider:
+   - Does the candidate have relevant project/work experience? (0–8 points)
+   - Are their achievements quantified and impactful? (0–6 points)
+   - Is the experience level appropriate for the role? (0–6 points)
+
+2. **match_analysis**: 2–3 sentences summarizing the overall fit.
+
+3. **experience_gap**: State the years of experience required by the JD vs what the resume shows. \
+If the JD says "3+ years" and the resume shows ~1 year, respond with: \
+"JD requires 3 years, resume shows 1 year — 2 years short". \
+If there is no gap or the JD doesn't specify years, respond with "none".
+
+4. **domain_mismatch**: true if the resume is in a COMPLETELY unrelated domain \
+(e.g., resume is for a chef, JD is for a software engineer). false for any tech-to-tech transition.
+
+5. **missing_keywords**: List of important technical skills/tools from the JD that are \
+NOT present in the resume. Focus on hard skills only, not soft skills.
+
+6. **improvement_suggestions**: 3–5 specific, actionable suggestions to improve the resume \
+for this specific role.
+
+## Output format:
+Return ONLY a valid JSON object. No markdown, no explanation, no code fences.
 
 {
-    "evaluation_steps": {
-        "required_skills_found": ["<skill1>", "<skill2>"],
-        "required_skills_missing": ["<skill1>", "<skill2>"],
-        "preferred_skills_missing": ["<skill1>"],
-        "experience_gap": "<e.g. JD requires 3 years, resume shows 1 year — deduct 10 points>",
-        "deduction_breakdown": "<e.g. 3 missing required skills (-24) + 2 missing preferred (-6) = -30 total>"
-    },
-    "score": <integer strictly calculated from deductions above>,
-    "match_analysis": "<2-3 sentences on how well the candidate fits>",
+    "quality_score": <integer 0-20>,
+    "match_analysis": "<2-3 sentence summary>",
+    "experience_gap": "<e.g. 'JD requires 3 years, resume shows 1 year — 2 years short' or 'none'>",
+    "domain_mismatch": <true or false>,
     "missing_keywords": ["<keyword1>", "<keyword2>"],
-    "improvement_suggestions": ["<specific action 1>", "<specific action 2>"]
-}
-"""
+    "improvement_suggestions": ["<suggestion1>", "<suggestion2>"]
+}"""
 
-import json
 
-def analyze_resume_ats(latex_code: str, job_description: str) -> tuple:
+def get_qualitative_analysis(
+    resume_plain_text: str,
+    job_description: str,
+) -> tuple[bool, dict | None, str | None]:
+    """
+    Get qualitative ATS feedback from the LLM.
+
+    The LLM provides:
+    - quality_score (0–20): experience alignment rating
+    - match_analysis: summary paragraph
+    - experience_gap: years short description
+    - domain_mismatch: boolean
+    - missing_keywords: list of missing hard skills
+    - improvement_suggestions: actionable advice
+
+    The LLM does NOT provide the final ATS score — that's calculated
+    deterministically in keyword_extractor.calculate_deterministic_score().
+
+    Args:
+        resume_plain_text: Resume converted to plain text (no LaTeX)
+        job_description: The job description text
+
+    Returns:
+        tuple: (success, analysis_dict, error_message)
+    """
     client = get_groq_client()
 
     user_message = (
         "Analyze this resume against the job description.\n\n"
-        "RESUME (LaTeX):\n"
-        f"{latex_code}\n\n"
+        "RESUME (plain text):\n"
+        f"{resume_plain_text}\n\n"
         "---\n\n"
         "JOB DESCRIPTION:\n"
         f"{job_description}\n\n"
         "---\n\n"
-        "Follow the scoring rules strictly. "
-        "Extract every required skill from the JD, check each one in the resume, "
-        "calculate deductions mathematically, then return the JSON."
+        "Provide qualitative feedback only. Do NOT calculate a final score. "
+        "Return the JSON as specified."
     )
 
     try:
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
-                {"role": "system", "content": ATS_SYSTEM_PROMPT},
+                {"role": "system", "content": ATS_QUALITATIVE_PROMPT},
                 {"role": "user", "content": user_message},
             ],
-            temperature=0.7,       # higher = less repetitive
+            temperature=0.4,
             max_tokens=2048,
             response_format={"type": "json_object"},
         )
@@ -158,10 +198,27 @@ def analyze_resume_ats(latex_code: str, job_description: str) -> tuple:
         content = response.choices[0].message.content
         analysis = json.loads(content)
 
-        # Validate the score is actually an integer in range
-        score = analysis.get("score")
-        if not isinstance(score, int) or not (0 <= score <= 100):
-            analysis["score"] = max(0, min(100, int(score)))
+        # Validate and clamp quality_score to 0–20
+        qs = analysis.get("quality_score", 10)
+        if not isinstance(qs, int):
+            try:
+                qs = int(qs)
+            except (ValueError, TypeError):
+                qs = 10
+        analysis["quality_score"] = max(0, min(20, qs))
+
+        # Ensure domain_mismatch is a boolean
+        analysis["domain_mismatch"] = bool(analysis.get("domain_mismatch", False))
+
+        # Ensure lists are actually lists
+        if not isinstance(analysis.get("missing_keywords"), list):
+            analysis["missing_keywords"] = []
+        if not isinstance(analysis.get("improvement_suggestions"), list):
+            analysis["improvement_suggestions"] = []
+
+        # Ensure experience_gap is a string
+        if not isinstance(analysis.get("experience_gap"), str):
+            analysis["experience_gap"] = "none"
 
         return True, analysis, None
 

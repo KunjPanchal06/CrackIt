@@ -20,7 +20,8 @@
 ### Backend
 - **Python + FastAPI** — High-performance async API
 - **Supabase** — PostgreSQL database + Auth + Storage
-- **Groq API** — Llama 3.3 70B (tailoring) + Llama 3.1 8B (ATS scoring)
+- **Groq API** — Llama 3.3 70B (tailoring + ATS qualitative analysis)
+- **Hybrid ATS Engine** — Deterministic keyword scoring + LLM quality feedback
 - **Tectonic** — LaTeX to PDF compilation
 - **ARQ + Upstash Redis** — Async job queue
 - **PyMuPDF + python-docx** — Document parsing
