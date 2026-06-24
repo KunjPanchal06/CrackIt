@@ -53,7 +53,7 @@ app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(resume.router, prefix="/api/v1/resumes", tags=["Resumes"])
 app.include_router(tailor.router, prefix="/api/v1/tailor", tags=["AI Tailoring"])
 
-from app.routers import ats, application
-# from app.routers import dashboard
+from app.routers import ats, application, dashboard
 app.include_router(ats.router, prefix="/api/v1/ats", tags=["ATS Scoring"])
 app.include_router(application.router, prefix="/api/v1/applications", tags=["Application Tracker"])
+app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["Dashboard"])
