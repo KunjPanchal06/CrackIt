@@ -129,10 +129,10 @@ uvicorn app.main:app --reload --port 8000
 - [x] Job description intake (paste or upload)
 - [x] AI resume tailoring (Groq / Llama 3.3)
 - [x] ATS score & analysis
-- [ ] PDF export (Tectonic)
+- [x] PDF export (Tectonic)
 - [ ] Version history
 - [x] Application tracker
-- [ ] Dashboard
+- [x] Dashboard
 - [ ] Deployment
 
 ---

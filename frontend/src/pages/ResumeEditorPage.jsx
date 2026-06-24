@@ -18,6 +18,7 @@ import {
   Pencil,
   Check,
   X,
+  Download,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -350,6 +351,26 @@ export default function ResumeEditorPage() {
               </>
             )}
           </button>
+
+          {/* Download PDF — visible only after compilation */}
+          {pdfUrl && (
+            <a
+              href={pdfUrl}
+              download={`${title.replace(/[^a-zA-Z0-9 _-]/g, '')}.pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(
+                'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium',
+                'border border-success/30 bg-success/10 text-success',
+                'hover:bg-success/20 transition-all duration-200',
+              )}
+              title="Download PDF"
+              id="download-pdf-btn"
+            >
+              <Download className="w-4 h-4" />
+              Download
+            </a>
+          )}
         </div>
       </div>
 

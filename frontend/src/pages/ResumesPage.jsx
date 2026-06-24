@@ -9,6 +9,7 @@ import {
   FileCheck,
   Loader2,
   AlertCircle,
+  Download,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -166,23 +167,46 @@ export default function ResumesPage() {
                   <FileText className="w-5 h-5 text-white" />
                 </div>
 
-                {/* Delete Button */}
-                <button
-                  onClick={(e) => handleDelete(e, resume.id, resume.title)}
-                  className={cn(
-                    'p-1.5 rounded-lg opacity-0 group-hover:opacity-100',
-                    'hover:bg-destructive/10 text-muted-foreground hover:text-destructive',
-                    'transition-all duration-200'
+                {/* Actions */}
+                <div className="flex items-center gap-1">
+                  {/* Download Button (only if PDF exists) */}
+                  {resume.pdf_url && (
+                    <a
+                      href={resume.pdf_url}
+                      download={`${resume.title.replace(/[^a-zA-Z0-9 _-]/g, '')}.pdf`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className={cn(
+                        'p-1.5 rounded-lg opacity-0 group-hover:opacity-100',
+                        'hover:bg-success/10 text-muted-foreground hover:text-success',
+                        'transition-all duration-200'
+                      )}
+                      title="Download PDF"
+                      id={`download-resume-${resume.id}`}
+                    >
+                      <Download className="w-4 h-4" />
+                    </a>
                   )}
-                  title="Delete resume"
-                  id={`delete-resume-${resume.id}`}
-                >
-                  {deletingId === resume.id ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-4 h-4" />
-                  )}
-                </button>
+
+                  {/* Delete Button */}
+                  <button
+                    onClick={(e) => handleDelete(e, resume.id, resume.title)}
+                    className={cn(
+                      'p-1.5 rounded-lg opacity-0 group-hover:opacity-100',
+                      'hover:bg-destructive/10 text-muted-foreground hover:text-destructive',
+                      'transition-all duration-200'
+                    )}
+                    title="Delete resume"
+                    id={`delete-resume-${resume.id}`}
+                  >
+                    {deletingId === resume.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* Title */}
