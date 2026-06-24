@@ -101,12 +101,13 @@ CREATE TABLE public.applications (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
     job_description_id UUID REFERENCES public.job_descriptions ON DELETE SET NULL,
-    tailored_resume_id UUID REFERENCES public.tailored_resumes ON DELETE SET NULL,
+    resume_id UUID REFERENCES public.resumes ON DELETE SET NULL,
     company TEXT NOT NULL,
     role TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'applied', -- 'saved', 'applied', 'interviewing', 'offer', 'rejected'
+    status TEXT NOT NULL DEFAULT 'saved', -- 'saved', 'applied', 'interviewing', 'offer', 'rejected'
     applied_date DATE DEFAULT CURRENT_DATE,
     salary_range TEXT,
+    job_url TEXT,                          -- link to the original job posting
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL

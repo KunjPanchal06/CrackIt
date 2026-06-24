@@ -131,7 +131,7 @@ uvicorn app.main:app --reload --port 8000
 - [x] ATS score & analysis
 - [ ] PDF export (Tectonic)
 - [ ] Version history
-- [ ] Application tracker
+- [x] Application tracker
 - [ ] Dashboard
 - [ ] Deployment
 

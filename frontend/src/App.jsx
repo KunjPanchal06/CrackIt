@@ -18,6 +18,7 @@ import ResumesPage from '@/pages/ResumesPage';
 import ResumeEditorPage from '@/pages/ResumeEditorPage';
 import TailorPage from '@/pages/TailorPage';
 import AtsPage from '@/pages/AtsPage';
+import ApplicationsPage from '@/pages/ApplicationsPage';
 
 // Auth store
 import useAuthStore from '@/store/authStore';
@@ -79,7 +80,7 @@ export default function App() {
           <Route path="/job-descriptions" element={<PlaceholderPage title="Job Descriptions" phase={3} />} />
           <Route path="/tailor" element={<TailorPage />} />
           <Route path="/ats" element={<AtsPage />} />
-          <Route path="/applications" element={<PlaceholderPage title="Application Tracker" phase={8} />} />
+          <Route path="/applications" element={<ApplicationsPage />} />
           <Route path="/settings" element={<PlaceholderPage title="Settings" phase={10} />} />
         </Route>
 
